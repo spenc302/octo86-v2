@@ -46,4 +46,4 @@ Use an existing Android Windows-compatibility runtime as the execution layer. Bu
 
 ## Current status
 
-Planning and runtime-source evaluation. No Android APK has been built and no on-device compatibility has yet been demonstrated.
+Winlator WB64 has been selected as the first runtime candidate after reviewing its public README and top-level MIT license. The initial review is not a full source/dependency audit. The next milestone is an on-device WB64 smoke test followed by an AoE3 launch test. No Android APK has been built and no AoE3 compatibility has yet been demonstrated. See [runtime evaluation](docs/runtime-evaluation.md) and the [device validation checklist](docs/device-validation.md). No GitHub Actions build has been run.
