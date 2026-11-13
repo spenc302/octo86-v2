@@ -193,3 +193,41 @@ Do not replace our app base wholesale with the Frost 7.1 source. Instead, reuse 
 - No Frost binaries or source files copied into octo86-v2.
 - No app source code changed.
 - No GitHub Actions workflow or build run.
+
+
+## AoE3 Complete Collection compatibility target (2026-11-13)
+
+This section is specifically about the original **Age of Empires III (2007) / Complete Collection**, not Age of Empires III: Definitive Edition.
+
+### Verified game requirements
+
+- Steam's legacy Age of Empires III (2007) support page lists Windows XP, DirectX 9.0c, and the original low-end GPU requirements. This is the legacy game, not the later Definitive Edition. Reference: https://help.steampowered.com/en/wizard/HelpWithGameTechnicalIssue?appid=105450
+- PCGamingWiki's original-game technical summary identifies the Windows executable as 32-bit x86 and the Windows renderer as Direct3D 9.0c. It also identifies DirectSound audio and Bink video. Reference: https://www.pcgamingwiki.com/wiki/AoE3
+- The Complete Collection includes the base game and both expansions. Its legacy Steam listing is App ID 105450. The game's multiplayer service was retired in 2024; campaign and skirmish remain playable according to the publisher's Steam announcement. Reference: https://store.steampowered.com/oldnews/?appgroupname=Age+of+Empires+III%3A+Complete+Collection&appids=105450&feed=steam_community_announcements
+- Do not confuse this with **Age of Empires III: Definitive Edition**. DE is a separate 64-bit-era product requiring DirectX 11 and substantially newer Windows hardware. It is not the target for this port.
+
+### Runtime implications
+
+The original Complete Collection's known requirements make this primarily a **32-bit Windows compatibility problem**, not a DirectX 11/VKD3D problem:
+
+1. The selected Wine payload must correctly run 32-bit x86 Windows PE applications on the ARM64 Android host. Prefer a validated x86_64 WoW64 Wine build with Box64-compatible dispatch; a Wine build being labelled x86_64 is not sufficient proof.
+2. Start with the Direct3D 9 path. Test DXVK's D3D9 implementation with a compatible Turnip Vulkan driver as one candidate; retain WineD3D as the fallback comparison. Do not prioritize VKD3D, which targets Direct3D 12, or assume D8VK is relevant to this D3D9 game.
+3. The game's DirectSound dependency means audio compatibility needs its own test. The existence of an Android audio backend does not by itself prove that the game's DirectSound calls are handled correctly.
+4. Bink cutscenes should be tested separately from in-game rendering; a menu or skirmish test alone may not establish video playback compatibility.
+5. Test base game and expansion executables separately if present. The exact executable names and PE headers must be read from the user's own installed copy before hard-coding launch targets or claiming the exact build is verified.
+
+### Proposed first compatibility profile
+
+- Host ABI: Android arm64-v8a / Snapdragon 8 Gen 2.
+- Windows app: x86 (32-bit) AoE3 Complete Collection.
+- Wine: validated x86_64 WoW64 build with a working Box64 dispatch path.
+- Graphics: D3D9 through DXVK + Turnip as the first experiment; WineD3D as the controlled fallback.
+- Audio: test the current audio backend with DirectSound.
+- Prefix: fresh, isolated prefix per Wine payload; no cross-build prefix reuse.
+- Scope: offline campaign and skirmish. Do not design around the retired legacy multiplayer service.
+
+### Remaining device-specific verification
+
+The sources establish the game's published architecture/API requirements, but they do not inspect the user's exact installed executable or prove that the current Android runtime launches it. Before implementation is locked, collect only non-game-content metadata from the installed copy: executable filename, PE machine type (expected x86 / IMAGE_FILE_MACHINE_I386), and file version. No proprietary game assets need to be uploaded. Then validate launch and graphics on-device when a testable APK/runtime is available.
+
+No game files were downloaded or copied. No build or GitHub Actions workflow was run.
