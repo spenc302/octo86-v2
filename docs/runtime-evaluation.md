@@ -70,3 +70,30 @@ The phone's 16 GB RAM does not equal the game's recommended 4 GB dedicated VRAM.
 ## Build policy
 
 No GitHub Actions workflow or APK build has been started. Do not spend Actions minutes until the on-device runtime test and integration choice are settled.
+
+
+## WB64 source-level audit (2026-11-13)
+
+Inspected the public `winebox64/winlator-wb64` source tree at commit `32d381d08dffa6db7a90ba0f1d3af234b4fd0a08`, including the Android Gradle configuration and the Wine / guest-launcher implementation.
+
+Source references:
+- https://github.com/winebox64/winlator-wb64/tree/main
+- https://github.com/winebox64/winlator-wb64/blob/main/app/build.gradle
+- https://github.com/winebox64/winlator-wb64/blob/main/app/src/main/java/com/winlator/core/WineInfo.java
+- https://github.com/winebox64/winlator-wb64/blob/main/app/src/main/java/com/winlator/core/WineUtils.java
+- https://github.com/winebox64/winlator-wb64/blob/main/app/src/main/java/com/winlator/xenvironment/components/GuestProgramLauncherComponent.java
+
+### Confirmed source details
+
+- The accessible source tree is an older **7.1** app baseline, not the latest advertised WB64 app release. Its Gradle file uses compile SDK 30, min SDK 26, target SDK 28, NDK 22.1.7171670, and CMake 3.22.1.
+- Its built-in WineInfo baseline is Wine **9.2 x86_64**.
+- The checked-in assets include Box64 0.2.8 / 0.2.9, Box86 0.3.2 / 0.3.7, DXVK 0.96 / 1.10.3 / 2.3.1, and Turnip 24.1.0. These are evidence of the source snapshot's age, not a recommendation to ship those versions.
+- The guest launcher starts the guest command through Box64. In its default WoW64 mode it omits the separate Box86 environment and enables `BOX64_MMAP32=1`; the alternate non-WoW64 mode adds Box86 and a 32-bit PRoot loader. This makes the WoW64 setting a key compatibility variable, not a cosmetic preference.
+- Wine selection and prefix construction are coupled: the default Wine has separate x86_64 and i386 Windows DLL directories, and the container template populates system32/syswow64 from those directories. Custom Wine builds are imported and detected, but the payload's actual WoW64 capability and matching prefix layout still require validation.
+- The Android app source contains a broad container manager, X server, input controls, audio service, graphics wrapper selection and component installer. This is a substantial existing platform implementation; a lightweight game launcher can be layered over it after a working game launch is proven.
+
+### Decision
+
+Do **not** blindly fork this exact source snapshot and treat it as a current production base for Definitive Edition. Use it as an implementation reference and compatibility test candidate. Before choosing the source base, compare its old source baseline against a maintained source branch whose Android build configuration and runtime assets can be reproduced. For the game itself, start with a current compatible 64-bit Wine + Box64 + DXVK D3D11 + Turnip stack, then verify the installed executable's PE machine type.
+
+The current `octo86-v2` repository still contains documentation only; no Android app source has been added yet. No proprietary game files were copied, and no build or Actions run was started.
