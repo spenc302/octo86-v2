@@ -84,3 +84,28 @@ The separate upstream repository `brunodev85/winlator-app` is a real Android/Gra
 - Before designing the AoE3 launcher shortcut, inspect the target game's executable architecture, required DirectX version, dependencies, and renderer. In particular, determine whether the game is 32-bit and how this upstream runtime's Wine/Box64 configuration supports it; do not assume Box86 is present.
 - Do not strip the general container, display, audio, driver or input infrastructure until a working AoE3 launch path proves which parts are required.
 - No GitHub Actions workflow or build has been run as part of this inspection.
+
+
+## Runtime architecture findings (2026-11-13)
+
+The parent-pinned app revision was inspected directly at `a030f552f452158a2db64fdb32b490fa19c0b48d`.
+
+- `:app` is configured as an Android application with namespace/application ID `com.winlator`, compile SDK 35, min SDK 26, target SDK 28, Android Gradle Plugin 8.4.2, NDK 24.0.8215888 and CMake 3.22.1. The checked-in debug ABI filter is `arm64-v8a`, matching the target phone.
+- `RootFSInstaller.installIfNeeded()` checks a version marker and extracts the bundled `rootfs.tzst` asset into app-private storage on first launch. It displays extraction progress and records the rootfs version after success.
+- The rootfs installer also creates a versioned container template and resets affected container metadata when required.
+- The Wine installer expects a 64-bit Wine binary and the rootfs layout includes both `x86_64-windows` and `i386-windows` Wine DLL directories; the container template has both `system32` and `syswow64`. This is evidence of a WoW64-style 32-bit Windows compatibility layout, even though there is no separately named Box86 asset. It is not yet proof that the specific AoE3 executable will launch correctly.
+- The bundled Box64 archive is specifically `box64-0.4.4.tzst`. The graphics/runtime asset list also includes DXVK 1.10.3 and 2.4.1, D8VK 1.0, VKD3D 2.14.1, Turnip 26.2.0, Zink, VirGL, Vortek and Gladio packages.
+- The largest checked-in archives are `rootfs.tzst` (~62.2 MiB), `direct3d.tzst` (~29.8 MiB), `container_pattern.tzst` (~7.1 MiB), `box64-0.4.4.tzst` (~4.3 MiB), `dxvk-2.4.1.tzst` (~4.1 MiB), and `rootfs_patches.tzst` (~4.0 MiB). The measured asset total remains about 142.6 MiB.
+- The existing app has a broad container model (CPU configuration, graphics driver and DX wrapper selection, audio settings, Windows components, drive mappings, Box64 presets and shortcuts). We should retain that backend and only simplify the user-facing launcher after a known-good AoE3 profile works.
+
+### Revised 32-bit compatibility assessment
+
+The earlier concern that no Box86-named asset was present is narrowed, not fully resolved: this Wine build appears to use a 64-bit Wine installation with a WoW64 directory layout to support 32-bit Windows programs. We still need to inspect the Box64 launch component and the exact Wine build configuration to confirm how 32-bit PE processes are dispatched. AoE3: Complete Collection is expected to use a 32-bit Windows executable, so this remains a critical compatibility test.
+
+### Next work before modifying app source
+
+1. Inspect the exact guest-program launch command and Box64 environment setup, plus the pinned rootfs/Wine build metadata.
+2. Identify the user's AoE3 executable and game version from a filename/PE-header report (no game files need to be uploaded).
+3. Select a baseline container configuration for the game's DirectX path; do not assume DXVK is automatically the best renderer.
+4. Only then fork/import the Android app source and replace the app identity, icon, and home screen. Keep the upstream runtime and notices intact.
+5. No build or Actions workflow has been run.
