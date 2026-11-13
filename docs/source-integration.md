@@ -30,7 +30,7 @@ git submodule update --init --recursive
 
 ## What it does not accomplish
 
-- It does not yet make the repository a standalone Android Studio project. The upstream project is nested under `upstream/winlator`; Gradle integration/root project wiring remains to be designed.
+- It does not make the root of this repository an Android Studio project. The actual Gradle root is nested at `upstream/winlator/app`, which is itself a complete Android project with a wrapper. See [upstream build entry point](upstream-build-entrypoint.md) for the exact command and expected output path.
 - It does not change Winlator's app identity, launcher UI, or container behavior.
 - It does not add an AoE3 DE profile or game import workflow.
 - It does not prove the game launches on the REDMAGIC 8S Pro.
@@ -38,7 +38,7 @@ git submodule update --init --recursive
 
 ## Next engineering sequence
 
-1. Inspect the upstream root Gradle/build files and app manifest at the pinned commit.
+1. Open `upstream/winlator/app` as the Android Studio project and validate the upstream debug build before making app changes. The exact build entry point is documented in [upstream-build-entrypoint.md](upstream-build-entrypoint.md).
 2. Decide whether the safest first delivery is a direct upstream-derived app fork or a wrapper module included in the same Android project. Avoid a second app process or private cross-app integration.
 3. Keep the upstream package/application ID decision explicit; if changed, inspect authorities, deep links, file providers, and native/JNI assumptions.
 4. Add the AoE3 DE profile only through the upstream container/shortcut mechanisms that actually exist in source.
