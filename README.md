@@ -6,7 +6,7 @@ A device-first Android launcher and compatibility profile for running a legally 
 
 ## Project direction
 
-Use an existing Android Windows-compatibility runtime as the execution layer. Build a focused launcher/UI and AoE3-specific profile around it rather than reimplementing the game engine.
+Build one installable Android app with a focused AoE3 launcher/UI and an integrated Windows-compatibility runtime based on Winlator WB64. The intended user experience is one APK installation; large runtime components may be unpacked or provisioned on first launch. The game installation remains user-supplied.
 
 ### Runtime investigation baseline
 
@@ -46,4 +46,4 @@ Use an existing Android Windows-compatibility runtime as the execution layer. Bu
 
 ## Current status
 
-Winlator WB64 has been selected as the first runtime candidate after reviewing its public README and top-level MIT license. The initial review is not a full source/dependency audit. The next milestone is an on-device WB64 smoke test followed by an AoE3 launch test. No Android APK has been built and no AoE3 compatibility has yet been demonstrated. See [runtime evaluation](docs/runtime-evaluation.md) and the [device validation checklist](docs/device-validation.md). No GitHub Actions build has been run.
+Winlator WB64 has been selected as the runtime foundation for a single-install AoE3 app. The packaging target is one APK with runtime assets provisioned or unpacked on first launch if bundling everything would make the APK impractically large. The upstream Android app source has an Apache-2.0 license; the WB64 source mirror has an MIT top-level license, and each bundled dependency still needs its own license review. No Android APK has been built and no AoE3 compatibility has yet been demonstrated. See [runtime evaluation](docs/runtime-evaluation.md), [single-APK packaging](docs/single-apk-packaging.md), and the [device validation checklist](docs/device-validation.md). No GitHub Actions build has been run.
