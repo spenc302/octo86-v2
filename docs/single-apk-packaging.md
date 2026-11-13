@@ -109,3 +109,25 @@ The earlier concern that no Box86-named asset was present is narrowed, not fully
 3. Select a baseline container configuration for the game's DirectX path; do not assume DXVK is automatically the best renderer.
 4. Only then fork/import the Android app source and replace the app identity, icon, and home screen. Keep the upstream runtime and notices intact.
 5. No build or Actions workflow has been run.
+
+
+## Wine replacement investigation (2026-11-13)
+
+The user clarified that the Wine layer itself is the component to reconsider. The distinction below is important: several candidates are alternative Wine builds or Wine-derived compatibility stacks, not replacements for the Windows API implementation.
+
+### Candidate assessment
+
+1. **Kron4ek Wine-Builds — best first A/B candidate.** The project publishes Vanilla, Staging, Staging-TkG and Proton-derived builds, and explicitly documents an `amd64-wow64` build that runs 32-bit Windows applications without a separate 32-bit Linux library environment. This matches the current Box64-only architecture much more closely than a conventional 32-bit Wine build. However, its README also warns that ordinary Linux Wine dependencies are required and its published builds target desktop Linux/glibc, so the archive cannot simply be dropped into the Android rootfs. We would need to verify ABI/dependency compatibility and select a build specifically compiled for Box64/Android's glibc environment.
+2. **Proton-GE — useful test variant, not a Wine replacement.** It is a Wine-derived compatibility tool with gaming patches. It is more complex than a plain Wine build and carries Steam-oriented assumptions; only consider it after a simpler WoW64 build has been tested.
+3. **Hangover — interesting architecture, but still Wine-based.** Hangover runs x86/x86_64 Windows programs on AArch64 Wine through emulator DLLs. Its upstream documentation describes Box64 as an available emulator backend and its 32-bit dispatch through `wowbox64.dll`. This could reduce reliance on a complete x86 Wine process, but it is not a clean replacement for Wine and would require substantial integration work into the current Android app/rootfs. It is a research branch, not the first implementation choice.
+4. **FEX by itself — not a Wine replacement.** FEX emulates x86 Linux programs; Windows API compatibility still needs Wine/Hangover. FEX upstream explicitly says Android is not its target platform, so do not select it as the direct Android runtime replacement.
+5. **A completely different Windows API layer** would mean a major reimplementation or a native game port. There is no drop-in, maintained Android replacement that can simply take Wine's place for a conventional Windows PC game.
+
+### Recommended approach
+
+- Do not remove Wine from the app yet. Keep the runtime modular so the Wine payload can be swapped independently of Box64, graphics, input and container code.
+- First test a **Box64-compatible x86_64 WoW64 Wine build** as an alternate Wine payload. Verify its ELF architecture, WoW64 support, glibc baseline, required shared libraries, Wine server, prefix initialization, and 32-bit Direct3D DLL loading.
+- Compare the alternate against the existing Wine 10.10 payload with the same clean prefix and same game build. Capture Wine logs and test startup, menu, skirmish, audio, save/load and graphics separately.
+- Only after that baseline should we test Staging/Proton patches or Hangover's emulator-DLL architecture.
+- Do not mix Wine binaries from different builds in one prefix. Each Wine candidate should have its own isolated prefix and pinned version.
+- No runtime was downloaded, no source or binary was copied into the project, and no Actions workflow/build was run during this investigation.
