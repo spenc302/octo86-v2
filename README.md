@@ -6,7 +6,7 @@ A device-first Android launcher and compatibility profile for running a legally 
 
 ## Project direction
 
-Build one installable Android app with a focused AoE3 launcher/UI and an integrated Windows-compatibility runtime based on Winlator WB64. The intended user experience is one APK installation; large runtime components may be unpacked or provisioned on first launch. The game installation remains user-supplied.
+Build one installable Android app with a focused AoE3 launcher/UI and an integrated Windows-compatibility runtime based on the current upstream Winlator 11.2 Android source and its pinned runtime components. The intended user experience is one APK installation; large runtime components may be unpacked or provisioned on first launch. The game installation remains user-supplied.
 
 ### Runtime investigation baseline
 
@@ -30,7 +30,7 @@ Build one installable Android app with a focused AoE3 launcher/UI and an integra
 
 ## Milestones
 
-1. **Runtime selection:** inspect a maintained Winlator/WineBox64 source and identify a reproducible, license-compliant runtime baseline.
+1. **Runtime selection:** pin the current upstream Winlator 11.2 app source, submodules and runtime components to reproducible commits.
 2. **Game compatibility profile:** document the required Wine architecture, Box64 setup, DXVK version, Vulkan driver, display mode and environment settings.
 3. **First launch test:** launch the user's own AoE3 installation in an existing runtime before developing a custom wrapper.
 4. **Launcher shell:** create an Android UI for game path selection, profile management, launch/logging and settings.
@@ -46,4 +46,4 @@ Build one installable Android app with a focused AoE3 launcher/UI and an integra
 
 ## Current status
 
-Winlator WB64 has been selected as the runtime foundation for a single-install AoE3 app. The packaging target is one APK with runtime assets provisioned or unpacked on first launch if bundling everything would make the APK impractically large. The upstream Android app source has an Apache-2.0 license; the WB64 source mirror has an MIT top-level license, and each bundled dependency still needs its own license review. No Android APK has been built and no Definitive Edition compatibility has yet been demonstrated. See [runtime evaluation](docs/runtime-evaluation.md), [single-APK packaging](docs/single-apk-packaging.md), and the [device validation checklist](docs/device-validation.md). No GitHub Actions build has been run.
+The current upstream Winlator 11.2 source is the selected Android runtime foundation candidate; the older WB64 source snapshot is retained only as a historical implementation reference. The inspected upstream app module is a real Gradle Android application with compile SDK 35, min SDK 26, NDK 24.0.8215888, a Wine 10.10 baseline, a Box64 guest launcher, and first-launch root-filesystem provisioning. The parent repository supplies versioned runtime components including DXVK and Turnip. Each component still needs its own licence/provenance review. No Android APK has been built and no Definitive Edition compatibility has yet been demonstrated. See [runtime evaluation](docs/runtime-evaluation.md), [single-APK packaging](docs/single-apk-packaging.md), and the [device validation checklist](docs/device-validation.md). No GitHub Actions build has been run.
