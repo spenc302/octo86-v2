@@ -18,7 +18,7 @@ Build one installable Android app with a focused AoE3 launcher/UI and an integra
 - Mesa Turnip Vulkan driver for the Adreno GPU, subject to device/driver compatibility
 - Container/profile configuration, input mapping, audio and filesystem integration
 
-**Important:** Box86 is not a Windows compatibility layer and DXVK is not bundled automatically by Box86. Wine, the correct 32-bit ARM userspace, Box64, Vulkan and DXVK must be configured as a compatible whole. The game's executable architecture, Direct3D 11 path, launch dependencies, and compatibility must be verified against the user's installed edition.
+**Important:** Box64 is a CPU-translation layer, not a Windows compatibility layer. Wine supplies the Windows APIs; DXVK translates Direct3D 11 to Vulkan. If any required Windows component is 32-bit, the selected Wine build must provide a verified WoW64 path (and the runtime must support its dispatch requirements). The game's executable architecture, Direct3D 11 path, launch dependencies, and compatibility must be verified against the user's installed edition.
 
 ## Target device
 
