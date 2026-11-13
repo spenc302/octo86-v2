@@ -40,6 +40,18 @@ jobs:
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Verify Octo86 UI is integrated before building
+        working-directory: upstream/winlator/app
+        run: |
+          test -f app/src/main/java/com/winlator/Aoe3HomeFragment.java || {
+            echo "::error::Octo86 home screen has not been integrated into the Winlator app source."
+            exit 1
+          }
+          grep -q "Aoe3HomeFragment" app/src/main/java/com/winlator/MainActivity.java || {
+            echo "::error::MainActivity is not wired to the Octo86 home screen."
+            exit 1
+          }
+
       - name: Build upstream Winlator debug APK
         working-directory: upstream/winlator/app
         run: |
