@@ -235,7 +235,7 @@ No game files were downloaded or copied. No build or GitHub Actions workflow was
 
 ## Expanded game targets: AoE III original + Definitive Edition (2026-11-13)
 
-The project now treats both editions as intended compatibility targets, with separate game profiles over a shared Android runtime.
+The project now prioritizes Definitive Edition as the primary target. The original Complete Collection is optional future compatibility scope.
 
 ### Target A — Age of Empires III (2007) / Complete Collection
 
@@ -277,17 +277,17 @@ A shared runtime does not mean forcing both games into one Wine prefix or one se
 ### Recommended implementation order
 
 1. Stabilize the common Android container, Box64, graphics driver, audio and input layers.
-2. Establish the original game's D3D9/32-bit baseline because it is the simpler compatibility target.
-3. Add a distinct x86_64 + D3D11 profile for Definitive Edition.
-4. Test each edition independently, then add a game selector and per-title settings to the UI.
-5. Treat performance on the Snapdragon 8 Gen 2 / Adreno 740 as unverified until an on-device run; minimum PC requirements do not predict Android translation performance.
+2. Establish a 64-bit Wine/Box64 + D3D11 profile for Definitive Edition, after verifying the installed executable's PE machine type.
+3. Test startup, rendering, input, audio, cutscenes, and sustained gameplay independently.
+4. Add the Android launcher shell and per-game settings only after the runtime test succeeds.
+5. Treat performance on Snapdragon 8 Gen 2 / Adreno 740 as unverified; PC requirements do not predict Android translation performance.
 
 No game binaries or assets were downloaded. No APK build or GitHub Actions run was started.
 
 
 ## Target priority decision (2026-11-13)
 
-The user has selected **Age of Empires III: Definitive Edition as the primary target**. The original Complete Collection is no longer the first compatibility milestone; retain it as a possible secondary profile only if it can share the same runtime cleanly.
+The user has selected **Age of Empires III: Definitive Edition as the primary target**. The original Complete Collection is optional future scope and must not delay the Definitive Edition milestone.
 
 ### Revised implementation priority
 
