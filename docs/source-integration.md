@@ -49,3 +49,22 @@ git submodule update --init --recursive
 ## Licensing note
 
 The upstream parent repository contains an LGPL-2.1 licence and declares `app`, `gladio`, and `vortek` as separate submodules. Their own source and binary components must be audited at the pinned revisions. The parent licence is not a blanket licence for every archive, driver, rootfs package, Wine build, or game dependency. Keep the upstream notices and provide corresponding source/offer information where required before distributing modified binaries.
+
+
+## Android project integration findings (pinned app submodule)
+
+Inspected the app submodule at `a030f552f452158a2db64fdb32b490fa19c0b48d`.
+
+- The upstream Gradle root is deliberately small: `settings.gradle` includes only `:app`. The app module is the actual application; it is not published as a reusable Android library.
+- The app module uses namespace and application ID `com.winlator`, version name `11.2`, compile SDK 35, min SDK 26, target SDK 28, AGP 8.4.2, NDK 24.0.8215888, and CMake 3.22.1.
+- The manifest launches `com.winlator.MainActivity`, registers the X server display activity and foreground service, and declares a FileProvider authority hard-coded as `com.winlator.FileProvider`.
+- `MainActivity.onCreate()` selects the normal Containers/Shortcuts UI and calls `RootFSInstaller.installIfNeeded()` after permission handling. It also handles shortcuts, container file manager entry, and input-control editing.
+- The existing app is therefore a tightly integrated runtime manager, not a drop-in SDK/library. A separate wrapper app that launches it through a second Android package would complicate container lifecycle, filesystem permissions, and user experience.
+
+### Integration choice
+
+For the first single-APK implementation, **fork/derive the upstream app module in-place and customize its existing MainActivity/navigation**, rather than creating a second application that attempts to control Winlator externally. Keep the upstream container/runtime classes intact.
+
+Before changing `com.winlator` to an AoE3-specific application ID, inventory and update all package-sensitive references, including manifest component names, FileProvider authority, JNI/native library loading, intent actions, preferences, and any hard-coded filesystem paths. The first integration step should preserve the upstream application ID until a debug build can validate a deliberate package rename.
+
+No Gradle files, manifest, Java source, native source, or assets were modified in this integration step. No build was run.
