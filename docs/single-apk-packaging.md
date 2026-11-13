@@ -59,3 +59,18 @@ Measure both compressed download size and installed/unpacked size before choosin
 Target: **one APK install, first-launch runtime provisioning**.
 
 Do not start a build or GitHub Actions workflow yet. First inspect the upstream source layout and dependency packaging, pin a known runtime baseline, and confirm the AoE3 executable/renderer requirements.
+
+## Upstream source inspection (2026-11-13)
+
+The WB64 source mirror at `winebox64/winlator` states that the only source it provides is v7.1 and directs readers to Bruno's main Winlator repository. Its advertised v8 source folder is not a source tree: it contains only a README and an image. The WB64 mirror therefore cannot be treated as a complete, buildable v8 source checkout.
+
+The upstream repository `brunodev85/winlator` is a real source repository, but its Android app is a Git submodule at `app`, pointing to `brunodev85/winlator-app`; `vortek` and `gladio` are also separate submodules. The app repository contains an Android/Gradle project. This gives us a viable source lineage to inspect, but it does **not** establish that it contains WB64's custom patches or exact runtime payloads.
+
+### Integration decision
+
+- Treat `brunodev85/winlator-app` as the inspectable Android application base candidate.
+- Treat the WB64-specific modifications and payload versions as a separate reconciliation task; do not claim feature parity until compared.
+- Pin exact upstream commits for the app and each required submodule before importing or building.
+- Inspect the Gradle configuration, native/JNI integration, first-run installation path, asset/package format, and component manifests before changing the app identity or launcher UI.
+- Do not copy binary runtime payloads into this repository until their provenance, exact versions, and redistribution terms are verified.
+- No GitHub Actions workflow or build has been run as part of this inspection.
