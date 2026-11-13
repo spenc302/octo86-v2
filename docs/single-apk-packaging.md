@@ -161,3 +161,35 @@ However, Glibc itself does not implement Windows APIs and cannot replace Wine. A
 5. If Frost's Glibc build is selected, port its relevant runtime integration and required glibc patches into our own app only after a component-by-component source and licence audit. Do not copy the whole APK or assume its runtime assets are freely redistributable.
 
 No APK was installed, no binary was imported, and no Actions workflow/build was run during this assessment.
+
+
+## Frost source audit (2026-11-13)
+
+Inspected the accessible Frost source mirror at `LLazari/Winlator-Frost` (tree `c5217234802fcd6ba5f6f887825062beff7c3f7f`) and cross-checked its README against the upstream project references. The mirror identifies itself as a fork of `MrPhryaNikFrosty/Winlator-Frost`; its source README explicitly says the checked-in app source is only version 7.1 and is not updated with every newer release. Treat it as a useful implementation reference, not as source for the latest Frost 11.x APK.
+
+### What the source confirms
+
+- **Custom Wine is a real feature in the checked-in app source.** `WineUtils.extractWineFileForInstallAsync()` imports a user-selected XZ-compressed Wine archive into `/opt/installed-wine/preinstall/wine`. `findWineVersionAsync()` launches the candidate's Wine executable through the guest launcher, parses its reported version, and determines whether the Wine executable is x86 or x86_64. Installed Wine builds are then exposed through the container's Wine-version selector.
+- **Wine is separated from the Android app/runtime at the filesystem level.** The default Wine is under `/opt/wine`; imported builds live under `/opt/installed-wine`. `WineInfo` chooses the executable for the default Wine's WoW64 or 32-bit mode, while imported builds use their own `wine64` or `wine` executable. This is a useful pattern for our swappable Wine-payload design.
+- **There is an important limitation in this old source:** the WoW64 toggle is enabled only for the built-in/default Wine entry. Selecting an imported Wine build disables that toggle. Imported Wine is detected as x86 or x86_64, but the source does not demonstrate that an arbitrary imported x86_64 archive is a working WoW64 build. We must validate the actual payload and its 32-bit dispatch instead of assuming custom-Wine import solves that.
+- **Wine prefixes are built around the selected Wine's DLL layout.** The source has separate x86_64 and i386 Windows DLL directories and copies DLLs into the container's system32/syswow64 layout. The prefix/template and DLL population logic would need to be kept consistent with whichever Wine build is selected.
+- **Glibc is not implemented as a normal switch inside this source tree.** The checked-in `glibc_patches` directory contains a small set of Android System V shared-memory compatibility patches. The app source still includes and builds PRoot. The Glibc 7.1.3 runtime distribution is described separately in the README/releases; this repository does not provide a complete Glibc rootfs build recipe or an end-to-end Glibc APK packaging pipeline.
+- **The source is an older Android build baseline:** app module uses compile SDK 30, min SDK 26, target SDK 28, NDK 22.1.7171670, and CMake 3.22.1. It bundles `imagefs.txz`, `container_pattern.tzst`, Box64 archives, graphics wrappers/drivers and optional components. The installer expands the image filesystem into app-private storage. This is useful architecture reference, but it is not a drop-in upgrade over our current SDK/NDK baseline.
+- **The mirror's top-level MIT licence is not a complete redistribution clearance.** Its README credits separate upstream projects for Wine, Box86/Box64, Mesa/Turnip, DXVK, PRoot, Ubuntu rootfs and other components. Any binaries or archives we reuse need their own provenance, version and licence audit.
+
+### Decision for octo86-v2
+
+Do not replace our app base wholesale with the Frost 7.1 source. Instead, reuse the *design patterns* that directly solve our requirements:
+
+1. Keep a dedicated Wine payload directory and a manifest describing version, architecture, WoW64 mode, source URL/provenance, hashes and licence.
+2. Add Wine selection as a runtime configuration, but validate ELF architecture, required libraries, Wine server, PE 32-bit dispatch and prefix DLL layout before marking a payload usable.
+3. Keep Wine prefixes isolated by Wine payload identity; never switch the Wine binary under an existing prefix without an explicit migration/recreation step.
+4. Treat Frost Glibc 7.1.3 as a separately distributed runtime candidate. We still need its exact release asset/source recipe and dependency ABI before we can build or integrate it. The checked-in Frost source alone is insufficient to reproduce that Glibc variant.
+5. Use the user's Adreno 740 / Snapdragon 8 Gen 2 as the target for a controlled PRoot-vs-Glibc comparison, but hold Wine, prefix, game files, DX wrapper and graphics-driver versions constant while changing only the runtime layer.
+
+### Audit status
+
+- Source inspection only; no Frost APK installed or executed.
+- No Frost binaries or source files copied into octo86-v2.
+- No app source code changed.
+- No GitHub Actions workflow or build run.
