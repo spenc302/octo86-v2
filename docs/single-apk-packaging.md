@@ -131,3 +131,33 @@ The user clarified that the Wine layer itself is the component to reconsider. Th
 - Only after that baseline should we test Staging/Proton patches or Hangover's emulator-DLL architecture.
 - Do not mix Wine binaries from different builds in one prefix. Each Wine candidate should have its own isolated prefix and pinned version.
 - No runtime was downloaded, no source or binary was copied into the project, and no Actions workflow/build was run during this investigation.
+
+
+## Winlator@Frost / Glibc 7.1.3 assessment (2026-11-13)
+
+The user suggested Winlator@Frost and its Glibc 7.1.3+ variant as a possible foundation.
+
+### What it is
+
+- Winlator@Frost is an Android Winlator fork, not a Wine replacement. It still uses Wine plus Box86/Box64.
+- The Frost README describes a separate Glibc 7.1.3 mod/release alongside its regular APK. Therefore "Glibc 7.1.3" refers to a Frost runtime/distribution variant, not a Wine version number.
+- Frost documents Turnip support for Snapdragon Adreno 6xx/7xx GPUs. The user's Snapdragon 8 Gen 2 / Adreno 740 is in that stated supported family.
+- Frost documents custom Wine installation/import. This is valuable because it lets us distinguish the Android/container base from the selected Wine build.
+- Frost's README warns that the Glibc variant has package-name/bench limitations and recommends fresh installation when switching variants; its containers are not necessarily portable between releases.
+- The current Frost download page advertises a later 11.x release using Wine 10.10, while the Glibc 7.1.3 reference in the Frost source README is an older Glibc-mod release. Do not conflate the Glibc version label with Wine 7.1.3 or assume that the old mod's internals match the latest Frost release.
+
+### Relevance to AoE3
+
+Frost is a strong reference implementation for the Android-side runtime, graphics selection, component installation, controller/input handling, and Wine switching. It may be a better Android app base than importing the older upstream Winlator baseline unchanged.
+
+However, Glibc itself does not implement Windows APIs and cannot replace Wine. A Glibc build can change the Linux userspace/runtime and possibly improve compatibility or performance for particular configurations, but the actual 32-bit Windows execution path still depends on the Wine build, WoW64 support, Box64 integration, and required libraries.
+
+### Revised recommendation
+
+1. Evaluate Frost's **Glibc 7.1.3 runtime as an Android runtime/base candidate**, not as the Wine replacement.
+2. Inspect its exact Wine payload and custom-Wine install path; determine whether its shipped Wine is the same family/build as our current Wine 10.10 baseline.
+3. Independently test a compatible WoW64 Wine payload through Frost's custom-Wine mechanism.
+4. Compare PRoot and Glibc on the same device, same game files, same Wine version, same prefix configuration, and same DXVK/Turnip versions. Change one variable at a time.
+5. If Frost's Glibc build is selected, port its relevant runtime integration and required glibc patches into our own app only after a component-by-component source and licence audit. Do not copy the whole APK or assume its runtime assets are freely redistributable.
+
+No APK was installed, no binary was imported, and no Actions workflow/build was run during this assessment.
