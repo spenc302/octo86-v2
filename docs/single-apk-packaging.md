@@ -283,3 +283,20 @@ A shared runtime does not mean forcing both games into one Wine prefix or one se
 5. Treat performance on the Snapdragon 8 Gen 2 / Adreno 740 as unverified until an on-device run; minimum PC requirements do not predict Android translation performance.
 
 No game binaries or assets were downloaded. No APK build or GitHub Actions run was started.
+
+
+## Target priority decision (2026-11-13)
+
+The user has selected **Age of Empires III: Definitive Edition as the primary target**. The original Complete Collection is no longer the first compatibility milestone; retain it as a possible secondary profile only if it can share the same runtime cleanly.
+
+### Revised implementation priority
+
+1. Build and validate the shared Android ARM64 runtime on the Snapdragon 8 Gen 2 / Adreno 740.
+2. Make the first game profile specifically for AoE III: Definitive Edition: 64-bit Windows environment, Direct3D 11 translation, graphics settings suitable for a mobile GPU, and dedicated prefix.
+3. Confirm the exact installed game executable's PE machine type and dependencies before fixing the Wine architecture or launch command. The official 64-bit OS requirement is a strong indicator of the intended 64-bit environment, but it is not a substitute for inspecting the actual executable.
+4. Test DXVK D3D11 + Turnip first, then isolate WineD3D or other compatible paths if needed.
+5. Treat the original 2007 Complete Collection as an optional later x86/WoW64 profile, not a prerequisite.
+
+The official minimum is 8 GB system RAM, 2 GB VRAM, DirectX 11 and 42 GB storage; recommended memory is 16 GB and recommended VRAM 4 GB. The user's phone has 16 GB shared system memory, not dedicated 4 GB VRAM, so this is a compatibility experiment with substantial memory/thermal uncertainty—not a claim that the phone meets the PC graphics requirements. Official support explicitly says Android is not supported. Source: https://support.ageofempires.com/hc/en-us/articles/360049678611-What-are-the-minimum-requirements-for-Age-of-Empires-III-Definitive-Edition
+
+No APK build or GitHub Actions run was started.
