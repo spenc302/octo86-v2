@@ -1,10 +1,12 @@
-# Runtime evaluation: Winlator WB64 for Age of Empires III: Definitive Edition
+# Runtime evaluation: Winlator 11.2 for Age of Empires III: Definitive Edition
 
 ## Decision
 
-Use **Winlator WB64 as the first runtime candidate**, not as a dependency to embed immediately. First validate the user's own legally obtained Age of Empires III: Definitive Edition installation inside an existing WB64 installation on the REDMAGIC 8S Pro. Only after that succeeds should this repository add a launcher shell or attempt a fork.
+Use **current upstream Winlator 11.2 as the primary Android runtime candidate**, not the older WB64 source mirror. Validate the user's own legally obtained Definitive Edition installation in the upstream app before adding a custom launcher. Keep the app source and runtime components pinned; do not copy the entire runtime blindly or start a build until the on-device validation path is clear.
 
-Upstream project: https://github.com/winebox64/winlator-wb64
+Upstream project: https://github.com/brunodev85/winlator
+
+The older WB64 source audit below is historical and is superseded by the 2026-11-13 upstream Winlator 11.2 source audit at the end of this document.
 
 ## Target game and official requirements
 
@@ -48,7 +50,7 @@ The phone's 16 GB RAM does not equal the game's recommended 4 GB dedicated VRAM.
 ## Test sequence
 
 1. Record Android/REDMAGIC OS version and available storage.
-2. Install an official WB64 release and complete first-run setup.
+2. Install the official Winlator 11.2 release and complete first-run setup.
 3. Confirm that a container starts, desktop output renders, Vulkan/Turnip is available, and logs can be captured.
 4. Identify the user's own Definitive Edition installation and store edition (Steam or Microsoft Store).
 5. Record executable filename, PE machine type, file version, and relevant non-sensitive dependency metadata; do not upload proprietary binaries or game assets.
@@ -97,3 +99,53 @@ Source references:
 Do **not** blindly fork this exact source snapshot and treat it as a current production base for Definitive Edition. Use it as an implementation reference and compatibility test candidate. Before choosing the source base, compare its old source baseline against a maintained source branch whose Android build configuration and runtime assets can be reproduced. For the game itself, start with a current compatible 64-bit Wine + Box64 + DXVK D3D11 + Turnip stack, then verify the installed executable's PE machine type.
 
 The current `octo86-v2` repository still contains documentation only; no Android app source has been added yet. No proprietary game files were copied, and no build or Actions run was started.
+
+
+## Current upstream Winlator 11.2 source audit (2026-11-13)
+
+The current upstream repository is `brunodev85/winlator`. Its README identifies the app as an Android application for x86_64 Windows applications using Wine and Box86/Box64. The current 11.2 release is listed as the latest release, and the parent repository's main branch was updated on 2026-11-02 (commit `30aafbdb9eea47b92669201621e03cd2cf04540d`).
+
+References:
+- https://github.com/brunodev85/winlator
+- https://github.com/brunodev85/winlator/releases
+- https://github.com/brunodev85/winlator/commit/30aafbdb9eea47b92669201621e03cd2cf04540d
+
+### Source inspection findings
+
+- The parent repository pins the Android app submodule at `a030f552f452158a2db64fdb32b490fa19c0b48d`, with Gladio at `116c0d14dedbea3bd057f98f1db138bb1efe225e` and Vortek at `b1730c5def9b575672e671aee11d79ae7adc63d1`. These are the inspected baseline pins; re-check before importing.
+- The app submodule is a real Android Gradle project. Its `app` module uses compile SDK 35, min SDK 26, target SDK 28, Android Gradle Plugin 8.4.2, NDK 24.0.8215888 and CMake 3.22.1. It identifies itself as version 11.2.
+- The app's `WineInfo` class sets Wine 10.10 as the main Wine version.
+- `GuestProgramLauncherComponent` launches guest commands through Box64, sets the guest rootfs environment, and provides Box64 logging/preset integration.
+- `RootFSInstaller` provisions the root filesystem into app-private storage on first launch. This directly matches the desired one-app installation model: the user installs one APK, then the app initializes its runtime data.
+- The app source contains dedicated Wine installation/version-detection logic, container/prefix creation, graphics-driver and DirectX-wrapper selection, and input/audio integration.
+- The current parent release/source information advertises Winlator 11.2; the release notes include Box64 updates and newer Turnip integration. The parent source history's latest inspected commit updates the Box64 installable-component catalogue, removing Box64 0.3.3 while retaining 0.3.5, 0.3.7 and 0.4.5 entries.
+- The inspected app asset tree includes DXVK 2.4.1 and Turnip 26.2.0 archives. These are source-tree observations, not proof that either version is optimal for AoE3 DE or that every archive may be redistributed by this project.
+
+### Revised decision
+
+**Use the current upstream Winlator 11.2 repository as the source foundation candidate. Do not use the old WB64 7.1 mirror as the main codebase.** WB64 and Frost remain useful reference implementations for runtime patterns, but the current upstream Winlator tree is more current and already has the required Android app architecture.
+
+For the first AoE3 DE test profile, start with:
+- 64-bit Wine 10.10 baseline.
+- Box64 x86_64 guest execution.
+- DXVK D3D11 as the initial graphics translation candidate.
+- Turnip on Adreno 740 as the initial Vulkan driver candidate.
+- A fresh, isolated AoE3 DE prefix.
+- Low-resolution / conservative graphics settings for the first launch test; tune only after startup and rendering work.
+
+These are test candidates, not confirmed compatible settings. The installed game executable's PE machine type and required helper components still need verification. The publisher's 64-bit Windows requirement is not a substitute for a PE-header inspection.
+
+### Integration and licensing guardrails
+
+- Keep the upstream app and submodule revisions pinned. Do not track floating `main` branches in a reproducible build.
+- Preserve the app source's actual licence and notices; the parent repository's licence and the app submodule's licence must be checked independently. The licence of the Android app does not automatically grant redistribution rights for Wine, Box64, Mesa/Turnip, DXVK, rootfs packages or other archives.
+- Before publishing an APK, produce a component manifest with exact version, source URL, checksum, licence, notices and source-offer obligations.
+- Prefer a fork/submodule-based integration over manually copying selected Java files. The launcher should be a focused layer on top of the complete runtime, not a replacement for its container, rootfs, graphics, audio or input subsystems.
+- Do not include the game, game executables, proprietary game assets or Microsoft redistributables. The user supplies their own game installation.
+
+### Current validation status
+
+- Source inspection only; no Winlator APK was installed or run in this session.
+- No AoE3 DE executable was inspected.
+- No Android app source was copied into `octo86-v2` yet.
+- No APK was built and no GitHub Actions workflow was run.
