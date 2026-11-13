@@ -231,3 +231,55 @@ The original Complete Collection's known requirements make this primarily a **32
 The sources establish the game's published architecture/API requirements, but they do not inspect the user's exact installed executable or prove that the current Android runtime launches it. Before implementation is locked, collect only non-game-content metadata from the installed copy: executable filename, PE machine type (expected x86 / IMAGE_FILE_MACHINE_I386), and file version. No proprietary game assets need to be uploaded. Then validate launch and graphics on-device when a testable APK/runtime is available.
 
 No game files were downloaded or copied. No build or GitHub Actions workflow was run.
+
+
+## Expanded game targets: AoE III original + Definitive Edition (2026-11-13)
+
+The project now treats both editions as intended compatibility targets, with separate game profiles over a shared Android runtime.
+
+### Target A — Age of Empires III (2007) / Complete Collection
+
+- Windows app architecture: 32-bit x86.
+- Graphics API: Direct3D 9.
+- Initial graphics candidate: DXVK D3D9 + Turnip; WineD3D fallback.
+- Runtime requirement: verified 32-bit PE dispatch through the selected ARM64-compatible Wine/Box64 arrangement.
+- Preserve a separate prefix and game profile.
+
+### Target B — Age of Empires III: Definitive Edition
+
+Official Age of Empires support lists these minimum requirements: 64-bit Windows 10 (version 18362 or later), 64-bit processor/OS, 8 GB RAM, DirectX 11, 2 GB VRAM, and 42 GB storage. Recommended memory is 16 GB and recommended VRAM is 4 GB. Reference: https://support.ageofempires.com/hc/en-us/articles/360049678611-What-are-the-minimum-requirements-for-Age-of-Empires-III-Definitive-Edition
+
+Steam lists the same core platform/API requirements and 42 GB storage. Reference: https://store.steampowered.com/app/933110/Age_of_Empires_III__Definitive_Edition/
+
+Runtime implications:
+- Target the x86_64 Windows executable path through Box64 + 64-bit Wine. Unlike the original game, this edition does not need the 32-bit WoW64 path as its primary execution mode.
+- Direct3D 11 translation is required. Evaluate DXVK's D3D11 implementation with Turnip first; keep WineD3D as a diagnostic/fallback only if it exposes a usable D3D11 path. Do not use VKD3D as the default assumption: VKD3D primarily targets Direct3D 12.
+- Expect materially higher GPU, memory, storage, and thermal pressure than the original edition. The phone's 16 GB system RAM is not equivalent to 16 GB of dedicated VRAM; Android, the container, Wine, Box64, graphics driver, and game all share physical memory.
+- The official support page states that Android devices are not supported platforms. This is therefore an experimental compatibility project, not an officially supported mobile port.
+- Keep the DE prefix, DLL overrides, graphics settings, and game configuration isolated from the original game's prefix.
+
+### Shared application design
+
+The Android APK should provide one shared container/runtime manager, but separate per-game profiles:
+
+| Setting | Original Complete Collection | Definitive Edition |
+|---|---|---|
+| Windows app target | x86 | x86_64 |
+| Wine path | WoW64-capable build | 64-bit Wine build |
+| CPU translation | Box64 + verified 32-bit dispatch | Box64 x86_64 |
+| Graphics API | D3D9 | D3D11 |
+| First translation candidate | DXVK D3D9 | DXVK D3D11 |
+| Prefix | Dedicated | Dedicated |
+| Initial priority | Compatibility baseline | Higher-demand experimental target |
+
+A shared runtime does not mean forcing both games into one Wine prefix or one set of DLL overrides. The launcher should identify each game profile and select its own Wine mode, prefix, DXVK architecture/DLL set, resolution, and performance defaults.
+
+### Recommended implementation order
+
+1. Stabilize the common Android container, Box64, graphics driver, audio and input layers.
+2. Establish the original game's D3D9/32-bit baseline because it is the simpler compatibility target.
+3. Add a distinct x86_64 + D3D11 profile for Definitive Edition.
+4. Test each edition independently, then add a game selector and per-title settings to the UI.
+5. Treat performance on the Snapdragon 8 Gen 2 / Adreno 740 as unverified until an on-device run; minimum PC requirements do not predict Android translation performance.
+
+No game binaries or assets were downloaded. No APK build or GitHub Actions run was started.
